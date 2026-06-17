@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --card: #1a1d27;
+      --border: #2a2d3e;
+      --a1: #6c63ff;
+      --a2: #00d9a3;
+      --a3: #ff6b6b;
+      --a4: #ffd166;
+      --a5: #06b6d4;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --r: 12px
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh
+    }
+
+    .hdr {
+      background: linear-gradient(135deg, #1a1d27, #12151f);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      gap: 14px
+    }
+
+    .hdr-ico {
+      font-size: 26px
+    }
+
+    .hdr h1 {
+      font-size: 21px;
+      font-weight: 700
+    }
+
+    .hdr p {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px
+    }
+
+    .filters {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end
+    }
+
+    .fg {
+      display: flex;
+      flex-direction: column;
+      gap: 4px
+    }
+
+    .fg label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .7px
+    }
+
+    .fg select,
+    .fg input {
+      background: #12151f;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 11px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      min-width: 130px;
+      outline: none;
+      transition: border-color .2s
+    }
+
+    .fg select:focus,
+    .fg input:focus {
+      border-color: var(--a1)
+    }
+
+    .vtabs {
+      display: flex;
+      gap: 3px
+    }
+
+    .tb {
+      background: #12151f;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 7px 13px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      cursor: pointer;
+      transition: all .2s
+    }
+
+    .tb.on {
+      background: var(--a1);
+      border-color: var(--a1);
+      color: #fff;
+      font-weight: 700
+    }
+
+    .tb:hover:not(.on) {
+      border-color: var(--a1);
+      color: var(--text)
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      padding: 22px 28px
+    }
+
+    .wide {
+      grid-column: 1/-1
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--lc, var(--a1)), transparent)
+    }
+
+    .ch {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 14px
+    }
+
+    .ct {
+      font-size: 14px;
+      font-weight: 700
+    }
+
+    .cs {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px
+    }
+
+    .cbadge {
+      background: #12151f;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 9px;
+      font-size: 11px;
+      color: var(--muted)
+    }
+
+    .cw {
+      position: relative;
+      height: 255px
+    }
+
+    .cw canvas {
+      width: 100% !important
+    }
+
+    .stw {
+      max-height: 275px;
+      overflow-y: auto
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px
+    }
+
+    th {
+      text-align: left;
+      padding: 7px 9px;
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--card)
+    }
+
+    td {
+      padding: 6px 9px;
+      border-bottom: 1px solid #1f2235
+    }
+
+    tr:last-child td {
+      border-bottom: none
+    }
+
+    tr:hover td {
+      background: #1f2235
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700
+    }
+
+    .pg {
+      background: rgba(0, 217, 163, .14);
+      color: #00d9a3
+    }
+
+    .po {
+      background: rgba(255, 209, 102, .14);
+      color: #ffd166
+    }
+
+    .pr {
+      background: rgba(255, 107, 107, .14);
+      color: #ff6b6b
+    }
+
+    .bar {
+      height: 5px;
+      border-radius: 3px;
+      background: var(--a1);
+      display: inline-block;
+      margin-right: 5px;
+      vertical-align: middle
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px
+    }
+
+    @media(max-width:860px) {
+      .grid {
+        grid-template-columns: 1fr
+      }
+
+      .wide {
+        grid-column: 1
+      }
+
+      .grid,
+      .filters,
+      .hdr {
+        padding: 14px
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="hdr">
+    <div class="hdr-ico">📊</div>
+    <div>
+      <h1>Company DB</h1>
+      <p id="sub-timeline"></p>
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="fg">
+      <label>Filter Mode</label>
+      <div class="vtabs">
+        <button class="tb on" id="mode-period" onclick="setMode('period')">Period View</button>
+        <button class="tb" id="mode-date" onclick="setMode('date')">Date Range</button>
+      </div>
+    </div>
+
+    <div class="fg" id="grp-year">
+      <label>Year</label>
+      <select id="ysel">
+        <option value="2026">2026</option>
+      </select>
+    </div>
+
+    <div class="fg" id="grp-period">
+      <label>Period</label>
+      <div class="vtabs" id="period-options">
+        <button class="tb on" data-v="Q1">Q1</button>
+        <button class="tb" data-v="Q2">Q2</button>
+        <button class="tb" data-v="Q3">Q3</button>
+        <button class="tb" data-v="Q4">Q4</button>
+        <button class="tb" data-v="H1">H1</button>
+        <button class="tb" data-v="H2">H2</button>
+        <button class="tb" data-v="Y">Full Year</button>
+      </div>
+    </div>
+
+    <div class="fg" id="grp-date" style="display:none">
+      <label>From Date</label>
+      <input type="date" id="dfrom" value="2026-01-01">
+    </div>
+    <div class="fg" id="grp-date2" style="display:none">
+      <label>To Date</label>
+      <input type="date" id="dto" value="2026-12-31">
+    </div>
+
+    <div class="fg">
+      <label>Country</label>
+      <select id="csel">
+        <option value="all">All Countries</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card wide" style="--lc:#6c63ff">
+      <div class="ch">
+        <div>
+          <div class="ct">📦 Stock Health</div>
+          <div class="cs sub-ctx">Inventory levels and running revenue</div>
+        </div>
+        <div class="cbadge" id="sb">Loading...</div>
+      </div>
+      <div class="stw" id="stbl"></div>
+    </div>
+
+    <div class="card" style="--lc:#00d9a3">
+      <div class="ch">
+        <div>
+          <div class="ct">🏙️ Best City Market</div>
+          <div class="cs sub-ctx">Top revenue-producing metropolitan centers</div>
+        </div>
+        <div class="cbadge" id="cb">—</div>
+      </div>
+      <div class="cw"><canvas id="cityC"></canvas></div>
+    </div>
+
+    <div class="card" style="--lc:#ff6b6b">
+      <div class="ch">
+        <div>
+          <div class="ct">🏷️ Product Line Sales</div>
+          <div class="cs sub-ctx">Revenue allocation across categories</div>
+        </div>
+        <div class="cbadge" id="pb">—</div>
+      </div>
+      <div class="cw"><canvas id="plC"></canvas></div>
+    </div>
+
+    <div class="card" style="--lc:#ffd166">
+      <div class="ch">
+        <div>
+          <div class="ct">🛒 Top Product Sales</div>
+          <div class="cs sub-ctx">Highest grossing individual stock items</div>
+        </div>
+        <div class="cbadge" id="prb">—</div>
+      </div>
+      <div class="cw"><canvas id="prodC"></canvas></div>
+    </div>
+
+    <div class="card" style="--lc:#06b6d4">
+      <div class="ch">
+        <div>
+          <div class="ct">🏢 Office Sales Support</div>
+          <div class="cs sub-ctx">Comparative organizational logistics throughput</div>
+        </div>
+        <div class="cbadge" id="ob">—</div>
+      </div>
+      <div class="cw"><canvas id="offC"></canvas></div>
+    </div>
+  </div>
+
+  <script>
+    let RAW = null;
+    const CH = {};
+    let FILTER_MODE = 'period';
+    let SELECTED_PERIOD = 'Q1';
+
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.borderColor = '#2a2d3e';
+    Chart.defaults.font = { family: "'Segoe UI',system-ui,sans-serif", size: 11 };
+
+    const PAL = ['#6c63ff', '#00d9a3', '#ff6b6b', '#ffd166', '#06b6d4', '#f97316', '#a78bfa', '#34d399', '#fb7185', '#60a5fa', '#facc15', '#c084fc'];
+    const col = i => PAL[i % PAL.length];
+    const money = v => { const n = +v; return n >= 1e6 ? '$' + (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? '$' + (n / 1e3).toFixed(1) + 'K' : '$' + n.toFixed(2) };
+
+    function kill(id) { if (CH[id]) { CH[id].destroy(); delete CH[id]; } }
+
+    // Toggles filter elements and instantly re-fetches context datasets
+    function setMode(mode) {
+      FILTER_MODE = mode;
+      document.getElementById('mode-period').classList.toggle('on', mode === 'period');
+      document.getElementById('mode-date').classList.toggle('on', mode === 'date');
+
+      document.getElementById('grp-period').style.display = mode === 'period' ? 'flex' : 'none';
+      document.getElementById('grp-year').style.display = mode === 'period' ? 'flex' : 'none'; // Toggle year menu visibility
+      document.getElementById('grp-date').style.display = mode === 'date' ? 'flex' : 'none';
+      document.getElementById('grp-date2').style.display = mode === 'date' ? 'flex' : 'none';
+
+      fetchDashboardData();
+    }
+
+    //Interactive button state processing for the periods tabs
+    document.querySelectorAll('#period-options .tb').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('#period-options .tb').forEach(b => b.classList.remove('on'));
+        e.target.classList.add('on');
+        SELECTED_PERIOD = e.target.getAttribute('data-v');
+        fetchDashboardData(); //Responsive Instant-Fire
+      });
+    });
+
+    //Detect field adjustments on selectors
+    document.getElementById('csel').addEventListener('change', fetchDashboardData);
+    document.getElementById('ysel').addEventListener('change', () => { if (FILTER_MODE === 'period') fetchDashboardData(); });
+    document.getElementById('dfrom').addEventListener('change', () => { if (FILTER_MODE === 'date') fetchDashboardData(); });
+    document.getElementById('dto').addEventListener('change', () => { if (FILTER_MODE === 'date') fetchDashboardData(); });
+
+    //Compiles interactive time-label text strings using the SELECTED YEAR
+    function getTimeframeLabel() {
+      const countryStr = document.getElementById('csel').value === 'all' ? 'All Territories' : document.getElementById('csel').value;
+      const yr = document.getElementById('ysel').value;
+
+      if (FILTER_MODE === 'period') {
+        const labels = {
+          'Q1': `First Quarter (Jan - Mar ${yr})`,
+          'Q2': `Second Quarter (Apr - Jun ${yr})`,
+          'Q3': `Third Quarter (Jul - Sep ${yr})`,
+          'Q4': `Fourth Quarter (Oct - Dec ${yr})`,
+          'H1': `First Half (Jan - Jun ${yr})`,
+          'H2': `Second Half (Jul - Dec ${yr})`,
+          'Y': `Full Calendar Year ${yr}`
+        };
+        return `${labels[SELECTED_PERIOD]} ⏐ ${countryStr}`;
+      } else {
+        return `Custom Window: ${document.getElementById('dfrom').value} to ${document.getElementById('dto').value} ⏐ ${countryStr}`;
+      }
+    }
+
+    //Build standard URL parameters applying the dynamic YEAR variable
+    function getQueryString() {
+      let view = 'annual';
+      let dateFrom = '';
+      let dateTo = '';
+      const country = document.getElementById('csel').value;
+      const yr = document.getElementById('ysel').value;
+
+      if (FILTER_MODE === 'period') {
+        if (SELECTED_PERIOD.startsWith('Q')) {
+          view = 'quarterly';
+          const qMap = { 'Q1': ['01-01', '03-31'], 'Q2': ['04-01', '06-30'], 'Q3': ['07-01', '09-30'], 'Q4': ['10-01', '12-31'] };
+          dateFrom = `${yr}-${qMap[SELECTED_PERIOD][0]}`;
+          dateTo = `${yr}-${qMap[SELECTED_PERIOD][1]}`;
+        } else if (SELECTED_PERIOD.startsWith('H')) {
+          view = 'semi';
+          const hMap = { 'H1': ['01-01', '06-30'], 'H2': ['07-01', '12-31'] };
+          dateFrom = `${yr}-${hMap[SELECTED_PERIOD][0]}`;
+          dateTo = `${yr}-${hMap[SELECTED_PERIOD][1]}`;
+        } else {
+          view = 'annual';
+          dateFrom = `${yr}-01-01`;
+          dateTo = `${yr}-12-31`;
+        }
+      } else {
+        view = 'quarterly';
+        dateFrom = document.getElementById('dfrom').value;
+        dateTo = document.getElementById('dto').value;
+      }
+
+      return `?view=${view}&date_from=${dateFrom}&date_to=${dateTo}&country=${country}`;
+    }
+
+    //Pipeline Data Gateway Connector
+    async function fetchDashboardData() {
+      try {
+        const urlParams = getQueryString();
+
+        //Let the user know data is loading immediately
+        document.getElementById('sub-timeline').textContent = "Updating dashboard logic...";
+
+        const response = await fetch('etl/dashboard_data.php' + urlParams);
+        if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
+
+        const data = await response.json();
+        if (data.error) {
+          alert(data.error);
+          return;
+        }
+
+        RAW = data;
+
+        //Dynamically populates Year Dropdown using true database boundary dates
+        const ysel = document.getElementById('ysel');
+        if (ysel && ysel.options.length <= 1 && RAW.meta && RAW.meta.date_min && RAW.meta.date_max) {
+          const minYear = parseInt(RAW.meta.date_min.substring(0, 4));
+          const maxYear = parseInt(RAW.meta.date_max.substring(0, 4));
+
+          ysel.innerHTML = ''; //Wipe fallback element
+          for (let y = minYear; y <= maxYear; y++) {
+            const o = document.createElement('option');
+            o.value = o.textContent = y;
+            ysel.appendChild(o);
+          }
+          //Default to the most recent data year
+          ysel.value = minYear;
+        }
+
+        //Dynamically populates Country dropdown choices
+        const csel = document.getElementById('csel');
+        if (csel && csel.options.length <= 1 && RAW.meta && RAW.meta.countries) {
+          RAW.meta.countries.forEach(c => {
+            if (!c) return;
+            const o = document.createElement('option');
+            o.value = o.textContent = c;
+            csel.appendChild(o);
+          });
+        }
+
+        // Update Title Sub-Text natively after dates configure
+        document.getElementById('sub-timeline').textContent = getTimeframeLabel();
+
+        renderAll();
+      } catch (err) {
+        console.error('Core Pipeline Breakdown Context:', err);
+      }
+    }
+
+    //1. STOCK HEALTH TABLE
+    function renderStock() {
+      const container = document.getElementById('stbl');
+      if (!RAW || !RAW.stock_health || !container) return;
+
+      const rows = RAW.stock_health;
+      document.getElementById('sb').textContent = rows.length + ' Items';
+
+      if (rows.length === 0) {
+        container.innerHTML = "<div style='padding:20px;color:#94a3b8'>No stock records matching state metrics found.</div>";
+        return;
+      }
+
+      const maxRemaining = Math.max(...rows.map(r => +r.remaining_stock), 1);
+
+      let h = `<table><thead><tr>
+        <th>Product ID/Name</th><th>Line Group</th><th>Stock Available</th><th>All-Time Ordered</th><th>Buy Cost</th><th>MSRP</th><th>Holding Value</th><th>Risk Status</th>
+      </tr></thead><tbody>`;
+
+      rows.forEach(r => {
+        const remaining = +r.remaining_stock;
+        const barW = Math.round(remaining / maxRemaining * 70);
+        let statusClass = 'pg';
+        if (r.status === 'Watch') statusClass = 'po';
+        if (r.status === 'Low') statusClass = 'pr';
+
+        h += `<tr>
+          <td><strong>${r.product_key}</strong> - ${r.product_name}</td>
+          <td><span class="pill" style="background:rgba(108,99,255,.14);color:#6c63ff">${r.product_line}</span></td>
+          <td><span class="bar" style="width:${barW}px"></span>${remaining.toLocaleString()}</td>
+          <td>${(+r.total_ordered).toLocaleString()}</td>
+          <td>$${(+r.buy_price).toFixed(2)}</td>
+          <td>$${(+r.msrp).toFixed(2)}</td>
+          <td>${money(r.remaining_value)}</td>
+          <td><span class="pill ${statusClass}">${r.status}</span></td>
+        </tr>`;
+      });
+      container.innerHTML = h + '</tbody></table>';
+    }
+
+    //2. BEST CITY MARKET BAR CHART
+    function renderCity() {
+      const canvas = document.getElementById('cityC');
+      if (!RAW || !RAW.city_sales || !canvas) return;
+      kill('cityC');
+
+      const records = RAW.city_sales;
+      document.getElementById('cb').textContent = records.length + ' Hubs';
+
+      const labels = records.map(r => r.city);
+      const values = records.map(r => +r.revenue);
+      const countries = records.map(r => r.country);
+
+      CH.cityC = new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: labels.map((_, i) => col(i) + 'cc'),
+            borderColor: labels.map((_, i) => col(i)),
+            borderWidth: 1,
+            borderRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: context => ` Revenue: ${money(context.raw)} (${countries[context.dataIndex]})`
+              }
+            }
+          },
+          scales: {
+            y: { ticks: { callback: v => money(v) }, grid: { color: '#1f2235' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    //3. PRODUCT LINE SALES DOUGHNUT CHART
+    function renderPL() {
+      const canvas = document.getElementById('plC');
+      if (!RAW || !RAW.productline_sales || !canvas) return;
+      kill('plC');
+
+      const records = RAW.productline_sales;
+      const aggregateRev = records.reduce((acc, curr) => acc + (+curr.revenue), 0);
+      document.getElementById('pb').textContent = money(aggregateRev);
+
+      const labels = records.map(r => r.product_line);
+      const values = records.map(r => +r.revenue);
+
+      CH.plC = new Chart(canvas.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: labels.map((_, i) => col(i + 2) + 'dd'),
+            borderColor: labels.map((_, i) => col(i + 2)),
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '55%',
+          plugins: {
+            legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6 } }
+          }
+        }
+      });
+    }
+
+    //4. TOP PRODUCT SALES HORIZONTAL BAR CHART
+    function renderProd() {
+      const canvas = document.getElementById('prodC');
+      if (!RAW || !RAW.product_sales || !canvas) return;
+      kill('prodC');
+
+      const records = RAW.product_sales;
+      document.getElementById('prb').textContent = 'Top ' + records.length;
+
+      const labels = records.map(r => r.product_name.length > 22 ? r.product_name.substring(0, 20) + '...' : r.product_name);
+      const values = records.map(r => +r.revenue);
+      const lines = records.map(r => r.product_line);
+
+      CH.prodC = new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: labels.map((_, i) => col(i + 4) + 'cc'),
+            borderColor: labels.map((_, i) => col(i + 4)),
+            borderWidth: 1,
+            borderRadius: 5
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: context => ` Revenue: ${money(context.raw)} | Category: ${lines[context.dataIndex]}`
+              }
+            }
+          },
+          scales: {
+            x: { ticks: { callback: v => money(v) }, grid: { color: '#1f2235' } },
+            y: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    //5. OFFICE SALES SUPPORT COMBO CHART
+    function renderOff() {
+      const canvas = document.getElementById('offC');
+      if (!RAW || !RAW.office_sales || !canvas) return;
+      kill('offC');
+
+      const records = RAW.office_sales;
+      document.getElementById('ob').textContent = records.length + ' Offices';
+
+      const labels = records.map(r => r.office_key);
+      const revenueValues = records.map(r => +r.revenue);
+      const orderValues = records.map(r => +r.orders);
+      const locations = records.map(r => `${r.city}, ${r.country}`);
+
+      CH.offC = new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Revenue Generated',
+              data: revenueValues,
+              backgroundColor: labels.map((_, i) => col(i + 6) + 'bb'),
+              borderColor: labels.map((_, i) => col(i + 6)),
+              borderWidth: 1,
+              borderRadius: 5,
+              yAxisID: 'y'
+            },
+            {
+              label: 'Orders Filled',
+              data: orderValues,
+              type: 'line',
+              borderColor: '#ffd166',
+              backgroundColor: '#ffd16622',
+              pointBackgroundColor: '#ffd166',
+              fill: false,
+              tension: .3,
+              yAxisID: 'y2'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                title: contexts => {
+                  const idx = contexts[0].dataIndex;
+                  return `${labels[idx]} (${locations[idx]})`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              position: 'left',
+              ticks: { callback: v => money(v) },
+              grid: { color: '#1f2235' }
+            },
+            y2: {
+              position: 'right',
+              grid: { display: false },
+              ticks: { callback: v => v.toLocaleString() }
+            },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    //Orchestrate full asset population and card description refinement
+    function renderAll() {
+      renderStock();
+      renderCity();
+      renderPL();
+      renderProd();
+      renderOff();
+    }
+
+    //Initial run pipeline bootstrap sequence
+    fetchDashboardData();
+  </script>
+</body>
+
+</html>
